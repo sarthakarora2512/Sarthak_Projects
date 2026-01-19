@@ -1148,6 +1148,73 @@ class GreenhouseJobAgent:
 
 
 # =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
+
+def load_resume_from_file(file_path: str) -> Optional[str]:
+    """
+    Load resume content from a file.
+
+    Args:
+        file_path: Path to resume file (supports .md, .txt, .html)
+
+    Returns:
+        Resume content as string, or None if file doesn't exist
+    """
+    path = Path(file_path)
+    if not path.exists():
+        return None
+
+    try:
+        content = path.read_text(encoding="utf-8")
+        logger.info(f"Loaded resume from {file_path} ({len(content)} chars)")
+        return content
+    except Exception as e:
+        logger.warning(f"Failed to load resume from {file_path}: {e}")
+        return None
+
+
+def find_resume_file() -> Optional[str]:
+    """
+    Search for a resume file in common locations.
+
+    Checks in order:
+    1. RESUME_FILE environment variable
+    2. ./resume.md
+    3. ./resume.txt
+    4. ./Resume.md
+    5. ~/resume.md
+
+    Returns:
+        Resume content if found, None otherwise
+    """
+    # Check environment variable first
+    env_path = os.getenv("RESUME_FILE")
+    if env_path:
+        content = load_resume_from_file(env_path)
+        if content:
+            return content
+
+    # Check common file locations
+    search_paths = [
+        "resume.md",
+        "resume.txt",
+        "Resume.md",
+        "RESUME.md",
+        "resume.html",
+        os.path.expanduser("~/resume.md"),
+        os.path.expanduser("~/Documents/resume.md"),
+    ]
+
+    for path in search_paths:
+        content = load_resume_from_file(path)
+        if content:
+            return content
+
+    return None
+
+
+# =============================================================================
 # MAIN ENTRY POINT
 # =============================================================================
 
@@ -1183,7 +1250,15 @@ def main():
         "phone": os.getenv("USER_PHONE", ""),
     }
 
-    base_resume_md = os.getenv("BASE_RESUME_MD", """# Alex Dev
+    # Load resume: file > environment variable > default
+    base_resume_md = find_resume_file()
+
+    if not base_resume_md:
+        base_resume_md = os.getenv("BASE_RESUME_MD")
+
+    if not base_resume_md:
+        logger.warning("No resume file found, using default sample resume")
+        base_resume_md = """# Alex Dev
 ### Summary
 Builder of reliable backend + AI workflows.
 
@@ -1194,7 +1269,12 @@ Builder of reliable backend + AI workflows.
 
 ### Skills
 Python, Go, Postgres, Docker, K8s, LangChain, REST, CI/CD
-""")
+"""
+        print("\nWARNING: Using default sample resume.")
+        print("To use your own resume, create one of these files:")
+        print("  - ./resume.md")
+        print("  - Set RESUME_FILE=/path/to/your/resume.md")
+        print()
 
     # Create and run agent
     agent = GreenhouseJobAgent(
