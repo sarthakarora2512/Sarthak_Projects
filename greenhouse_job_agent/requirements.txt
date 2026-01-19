@@ -1,0 +1,30 @@
+# Greenhouse Job Application Agent Dependencies
+
+# HTTP requests
+requests>=2.31.0
+
+# LangChain for LLM orchestration
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-openai>=0.0.5
+
+# Pydantic for data validation
+pydantic>=2.0.0
+
+# OpenAI (via langchain-openai, but explicit for clarity)
+openai>=1.0.0
+
+# Optional: For real PDF generation (uncomment if needed)
+# reportlab>=4.0.0
+# PyPDF2>=3.0.0
+
+# Optional: For better async support (uncomment if needed)
+# aiohttp>=3.9.0
+# httpx>=0.25.0
+
+# Development dependencies (optional)
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# black>=23.0.0
+# ruff>=0.1.0
+# mypy>=1.0.0
